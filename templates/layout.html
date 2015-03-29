@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {% block head %}
+    <title>{% block title %}{% endblock %} - Catalog App</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+
+    <script src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    {% endblock %} 
+</head>
+<body>
+<div class="container-fluid">
+
+<div class="row">
+    <div class="col-sm-3 col-md-2 sidebar" id ="menu">
+        <ul class="nav nav-sidebar" style="margin-bottom: 5px;">
+            <li>
+                <a href="{{ url_for('createItem') }}">Add Item</a>
+            </li>
+        </ul>
+        <ul class="nav nav-sidebar" style="margin-bottom: 5px;">
+            <li>
+                <a href="{{ url_for('latestItems') }}">Latest Items</a>
+            </li>
+        </ul>
+        <ul class="nav nav-sidebar">
+            <li>
+                <h4>Categories</h4>
+            </li>
+            {% for category in categories  %}
+            <li>
+                <a href="{{ url_for('listItems', category_name=category.name) }}">{{ category.name }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+        {% block content %}{% endblock %}
+    </div>
+</row>
+</div>
+<script>
+    $( document ).ready(function() {
+        $('#menu').find('a[href="{{ request.path|urlencode }}"]').parent().addClass('active');
+    });
+</script>
+</body>
+</html>

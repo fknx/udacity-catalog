@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+{% block title %}Edit Item{% endblock %}
+{% block content %}
+    <h1 class="page-header">Edit Item '{{ item.name }}' <small>{{ item.category.name }}</small></h1>
+
+    <form method="POST">
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" class="form-control" name="name" id="name" placeholder="enter the name" value="{{ item.name }}" />
+        </div>
+        <div class="form-group">
+            <label for="description">Name</label>
+            <textarea class="form-control" name="description" id="description" placeholder="enter the description" rows="3">{{ item.description }}</textarea>        
+        </div>
+        <div class="form-group">
+            <label for="category">Category</label>
+            <select class="form-control" name="category" id="category">
+                {% for category in categories %}
+                <option{% if category.id == item.category_id %} selected{% endif %}>{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a class="btn btn-default" href=" {{ url_for('latestItems') }}">Cancel</a>
+    </form>
+{% endblock %}

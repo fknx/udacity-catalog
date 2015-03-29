@@ -1,0 +1,7 @@
+table.table tr td div.action-group {
+    display:none;
+}
+
+table.table tr:hover td div.action-group {
+    display:inline-block;
+}
