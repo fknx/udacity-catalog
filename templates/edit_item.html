@@ -1,8 +1,7 @@
 {% extends "layout.html" %}
 {% block title %}Edit Item{% endblock %}
+{% block header %}Edit Item '{{ item.name }}' <small>{{ item.category.name }}</small>{% endblock %}
 {% block content %}
-    <h1 class="page-header">Edit Item '{{ item.name }}' <small>{{ item.category.name }}</small></h1>
-
     <form method="POST">
         <div class="form-group">
             <label for="name">Name</label>

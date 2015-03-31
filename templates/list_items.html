@@ -1,8 +1,8 @@
 {% extends "layout.html" %}
 {% block title %}{{ category.name }}{% endblock %}
+{% block header %}{{ category.name }} Items ({{ number_of_items }} {% if number_of_items == 1 %}item{% else %}items{% endif %}){% endblock %}
 {% block content %}
 
-    <h1 class="page-header">{{ category.name }} Items ({{ number_of_items }} {% if number_of_items == 1 %}item{% else %}items{% endif %})</h1>
     {% if items %}
     <div class="table-responsive">
         <table class="table table-hover table-condensed">

@@ -81,9 +81,9 @@ def createItem():
     item = Item(name=name, description=description, category=category, creation_date=datetime.utcnow())
     session.add(item)
     session.commit()
-    flash("the item '%s' has been created" % name)
+    flash("the item '%s' has been created" % name, "success")
 
-    return redirect(url_for('listItems', category_name=category_name))
+    return redirect(url_for('listItems', category_id=category.id))
 
 @app.route('/item/edit/<int:item_id>/', methods=['GET','POST'])
 def editItem(item_id):
@@ -121,9 +121,9 @@ def editItem(item_id):
     item.category = category
     session.add(item)
     session.commit()
-    flash("the item '%s' has been modified" % name)
+    flash("the item '%s' has been modified" % name, "success")
 
-    return redirect(url_for('listItems', category_name=category_name))
+    return redirect(url_for('listItems', category_id=category.id))
 
 @app.route('/item/delete/<int:item_id>/', methods=['GET','POST'])
 def deleteItem(item_id):
@@ -144,9 +144,9 @@ def deleteItem(item_id):
 
     session.delete(item)
     session.commit()
-    flash("the item '%s' has been removed" % item.name)
+    flash("the item '%s' has been removed" % item.name, "success")
 
-    return redirect(url_for('listItems', category_name=item.category.name))
+    return redirect(url_for('listItems', category_id=item.category.id))
 
 @app.route('/catalog.json/')
 def catalogJSON():

@@ -1,8 +1,7 @@
 {% extends "layout.html" %}
 {% block title %}Delete Item{% endblock %}
+{% block header %}Delete Item '{{ item.name }}' <small>{{ item.category.name }}</small>{% endblock %}
 {% block content %}
-    <h1 class="page-header">Delete Item '{{ item.name }}' <small>{{ item.category.name }}</small></h1>
-
     <form method="POST">
         <input type="hidden" name="nonce" id="nonce" value="{{ nonce }}" />
         <button type="submit" class="btn btn-primary">Delete</button>
