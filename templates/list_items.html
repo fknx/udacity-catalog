@@ -14,7 +14,7 @@
             </thead>
             <tbody>
             {% for item in items %}
-            <tr href="{{ url_for('showItem', category_name=category.name, item_name=item.name) }}">
+            <tr href="{{ url_for('showItem', category_id=category.id, item_id=item.id) }}">
                 <td>{{ loop.index }}</td>
                 <td>
                     {{ item.name }}

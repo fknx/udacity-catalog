@@ -30,29 +30,29 @@ def latestItems():
     items = session.query(Item).order_by(desc(Item.creation_date)).limit(10).all()
     return render_template('latest_items.html', categories=categories, items=items)
 
-@app.route('/catalog/<string:category_name>/items/')
-def listItems(category_name):
+@app.route('/category/<int:category_id>/items/')
+def listItems(category_id):
     """Lists all items of the specified category.
 
     Args:
-        category_name: the name of the category
+        category_id: the id of the category
     """
     categories = session.query(Category).all()
-    category = session.query(Category).filter_by(name=category_name).one()
+    category = session.query(Category).get(category_id)
     return render_template('list_items.html', categories=categories, category=category, number_of_items=len(category.items), items=category.items)
 
-@app.route('/catalog/<string:category_name>/<string:item_name>/')
-def showItem(category_name, item_name):
+@app.route('/category/<int:category_id>/item/<int:item_id>/')
+def showItem(category_id, item_id):
     """Shows the details of the specified item.
 
     Args:
-        category_name: the name of the item's category
-        item_name: the name of the item
+        category_id: the id of the item's category
+        item_id: the id of the item
     """
     categories = session.query(Category).all()
-    category = session.query(Category).filter_by(name=category_name).one()
+    category = session.query(Category).get(category_id)
 
-    item = session.query(Item).filter_by(name=item_name,category_id=category.id).one()
+    item = session.query(Item).filter_by(id=item_id, category_id=category.id).one()
     return render_template("show_item.html", categories=categories, item=item)
 
 @app.route('/item/new/', methods=['GET','POST'])

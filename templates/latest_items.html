@@ -15,11 +15,11 @@
             </thead>
             <tbody>
             {% for item in items %}
-            <tr href="{{ url_for('showItem', category_name=item.category.name, item_name=item.name) }}">
+            <tr href="{{ url_for('showItem', category_id=item.category.id, item_id=item.id) }}">
                 <td>{{ loop.index }}</td>
                 <td>{{ item.name }}</td>
                 <td>
-                    <a href="{{ url_for('listItems', category_name=item.category.name) }}">{{ item.category.name }}</a>
+                    <a href="{{ url_for('listItems', category_id=item.category.id) }}">{{ item.category.name }}</a>
                     <div class="action-group pull-right">
                         <a href="{{ url_for('editItem', item_id=item.id) }}">Edit</i></a>
                         <a href="{{ url_for('deleteItem', item_id=item.id) }}">Delete</i></a>
