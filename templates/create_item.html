@@ -19,6 +19,7 @@
                 {% endfor %}
             </select>
         </div>
+        <input type="hidden" name="nonce" id="nonce" value="{{ nonce }}" />
         <button type="submit" class="btn btn-primary">Create</button>
         <a class="btn btn-default" href=" {{ url_for('latestItems') }}">Cancel</a>
     </form>

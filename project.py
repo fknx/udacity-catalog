@@ -27,7 +27,7 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 app.config['GOOGLE_LOGIN_CLIENT_ID'] = '971132785154-vn9r0pssabbtc8vm3a7ereqpfqgoggiu.apps.googleusercontent.com'
-app.config['GOOGLE_LOGIN_CLIENT_SECRET'] = '<secret key>'
+app.config['GOOGLE_LOGIN_CLIENT_SECRET'] = '<client secret>'
 app.config['GOOGLE_LOGIN_REDIRECT_URI'] = 'http://localhost:8000/oauth2callback/'
 
 login_manager = LoginManager()
@@ -72,25 +72,31 @@ def createItem():
     """Creates a new item."""
     categories = session.query(Category).all()
     if request.method == 'GET':
-        return render_template('create_item.html', categories=categories)
+        return render_template('create_item.html', categories=categories, nonce=createNonce())
+
+    nonce = request.form['nonce'].strip()
+
+    if not useNonce(nonce):
+        flash("An error occurred. Please try again.", "danger")
+        return render_template('create_item.html', categories=categories, nonce=createNonce())
 
     name = request.form['name'].strip()
 
     if not name:
         flash("Please enter a name.", "danger")
-        return render_template('create_item.html', categories=categories)
+        return render_template('create_item.html', categories=categories, nonce=createNonce())
 
     category_name = request.form['category'].strip()
 
     if not category_name:
         flash("Please choose a category", "danger")
-        return render_template('create_item.html', categories=categories)
+        return render_template('create_item.html', categories=categories, nonce=createNonce())
 
     try:
         category = session.query(Category).filter_by(name=category_name).one()
     except Exception, e:
         flash("Please choose a valid category", "danger")
-        return render_template('create_item.html', categories=categories)
+        return render_template('create_item.html', categories=categories, nonce=createNonce())
 
     # check if an items with the same name already exists in this category
     existingItem = session.query(Item).filter_by(category_id=category.id, name=name).first()
@@ -119,25 +125,31 @@ def editItem(item_id):
     item = session.query(Item).get(item_id)
 
     if request.method == 'GET':
-        return render_template('edit_item.html', categories=categories, item=item)
+        return render_template('edit_item.html', categories=categories, item=item, nonce=createNonce())
+
+    nonce = request.form['nonce'].strip()
+
+    if not useNonce(nonce):
+        flash("An error occurred. Please try again.", "danger")
+        return render_template('edit_item.html', categories=categories, item=item, nonce=createNonce())
 
     name = request.form['name'].strip()
 
     if not name:
         flash("Please enter a name.", "danger")
-        return render_template('edit_item.html', categories=categories, item=item)
+        return render_template('edit_item.html', categories=categories, item=item, nonce=createNonce())
 
     category_name = request.form['category'].strip()
 
     if not category_name:
         flash("Please choose a category", "danger")
-        return render_template('edit_item.html', categories=categories, item=item)
+        return render_template('edit_item.html', categories=categories, item=item, nonce=createNonce())
 
     try:
         category = session.query(Category).filter_by(name=category_name).one()
     except Exception, e:
         flash("Please choose a valid category", "danger")
-        return render_template('edit_item.html', categories=categories, item=item)
+        return render_template('edit_item.html', categories=categories, item=item, nonce=createNonce())
 
     description = request.form['description'].strip()
 
@@ -145,14 +157,14 @@ def editItem(item_id):
     existingItem = session.query(Item).filter_by(category_id=category.id, name=name).first()
     if existingItem and existingItem.id != item.id:
         flash("An item with the same name already exists in this category. Please choose a different name", "danger")
-        return render_template('edit_item.html', categories=categories, item=item)
+        return render_template('edit_item.html', categories=categories, item=item, nonce=createNonce())
 
     item.name = name
     item.description = description
     item.category = category
     session.add(item)
     session.commit()
-    flash("Your changes have been saved." % name, "success")
+    flash("Your changes have been saved.", "success")
 
     return redirect(url_for('listItems', category_id=category.id))
 
@@ -172,6 +184,7 @@ def deleteItem(item_id):
     nonce = request.form['nonce'].strip()
 
     if not useNonce(nonce):
+        flash("An error occurred. Please try again.", "danger")
         return render_template('delete_item.html', categories=categories, item=item, nonce=createNonce()) # ToDo error message
 
     session.delete(item)
