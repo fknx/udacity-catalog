@@ -9,10 +9,12 @@
         <p>{{ item.description }}</p>
     </div>
 </div>
+{% if current_user.is_authenticated() %}
 <div class="row">
     <div class="col-md-6">
         <a href="{{ url_for('editItem', item_id=item.id) }}">Edit</a>
         <a href="{{ url_for('deleteItem', item_id=item.id) }}">Delete</a>
     </div>
 </div>
+{% endif %}
 {% endblock %}

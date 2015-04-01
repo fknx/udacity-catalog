@@ -10,9 +10,12 @@ app = Flask(__name__)
 
 from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker
-from database_setup import Base, Category, Item
+from database_setup import Base, Category, Item, User
 
 from jinja2 import Environment, PackageLoader
+
+from flask_login import LoginManager, login_user, logout_user, login_required
+from flask_googlelogin import GoogleLogin
 
 env = Environment(loader=PackageLoader('project', 'templates'))
 env.filters['urlencode'] = urlencode
@@ -22,6 +25,14 @@ Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
+
+app.config['GOOGLE_LOGIN_CLIENT_ID'] = '971132785154-vn9r0pssabbtc8vm3a7ereqpfqgoggiu.apps.googleusercontent.com'
+app.config['GOOGLE_LOGIN_CLIENT_SECRET'] = '<secret key>'
+app.config['GOOGLE_LOGIN_REDIRECT_URI'] = 'http://localhost:8000/oauth2callback/'
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+googlelogin = GoogleLogin(app, login_manager)
 
 @app.route('/')
 def latestItems():
@@ -56,10 +67,11 @@ def showItem(category_id, item_id):
     return render_template("show_item.html", categories=categories, item=item)
 
 @app.route('/item/new/', methods=['GET','POST'])
+@login_required
 def createItem():
     """Creates a new item."""
     categories = session.query(Category).all()
-    if (request.method == 'GET'):
+    if request.method == 'GET':
         return render_template('create_item.html', categories=categories)
 
     name = request.form['name'].strip()
@@ -86,6 +98,7 @@ def createItem():
     return redirect(url_for('listItems', category_id=category.id))
 
 @app.route('/item/edit/<int:item_id>/', methods=['GET','POST'])
+@login_required
 def editItem(item_id):
     """Modifies the item with the given id.
 
@@ -95,7 +108,7 @@ def editItem(item_id):
     categories = session.query(Category).all()
     item = session.query(Item).get(item_id)
 
-    if (request.method == 'GET'):
+    if request.method == 'GET':
         return render_template('edit_item.html', categories=categories, item=item)
 
     name = request.form['name'].strip()
@@ -126,6 +139,7 @@ def editItem(item_id):
     return redirect(url_for('listItems', category_id=category.id))
 
 @app.route('/item/delete/<int:item_id>/', methods=['GET','POST'])
+@login_required
 def deleteItem(item_id):
     """Delete the item with the given id.
 
@@ -134,7 +148,7 @@ def deleteItem(item_id):
     """
     categories = session.query(Category).all()
     item = session.query(Item).get(item_id)
-    if (request.method == 'GET'):
+    if request.method == 'GET':
         return render_template('delete_item.html', categories=categories, item=item, nonce=createNonce())
 
     nonce = request.form['nonce'].strip()
@@ -169,6 +183,70 @@ def catalogXML():
     content.append("</Categories>")
 
     return str.join("\n", content), 200, {'Content-Type': 'text/xml'}
+
+@app.route('/login/', methods=['GET','POST'])
+def login():
+    """Redirects the user to the Google login page."""
+    if request.method == 'GET':
+        categories = session.query(Category).all()
+        return render_template('login.html', categories=categories)
+
+    return googlelogin.unauthorized_callback()
+
+@app.route('/logout/', methods=['GET','POST'])
+@login_required
+def logout():
+    """Logs out the current user."""
+    logout_user()
+    flash("You have been logged out successfully.", "success")
+    return redirect(url_for('login'))
+
+@app.route('/oauth2callback/')
+@googlelogin.oauth2callback
+def oauth2callback(token, userinfo, **params):
+    """The Oauth2 callback from Flask-GoogleLogin"""
+    id = userinfo['id']
+    name = userinfo['name']
+    picture = userinfo['picture']
+
+    user = User(id, name, picture)
+
+    login_user(user)
+
+    # store the user info in the session
+    flask_session['user'] = (id, name, picture)
+
+    return redirect(request.args.get("next") or url_for("latestItems"))
+
+@login_manager.user_loader
+def load_user(userid):
+    """User loader for Flask Login. As the user is only stored
+    in the session an attempt is made to retrieve the user from the session.
+    In case this fails, None is returned.
+
+    Args:
+        userid: the user id
+
+    Returns:
+        the user object or None in case the user could not be retrieved from the session
+    """
+    try:
+        userTuple = flask_session['user']
+
+        if not userTuple:
+            return None
+
+        id = userTuple[0]
+        if userid != id:
+            return None
+
+        name = userTuple[1]
+        picture = userTuple[2]
+
+        user = User(id, name, picture)
+        return user
+    except:
+        return None
 
 def createNonce():
     """Creates a new nonce and stores it in the session."""

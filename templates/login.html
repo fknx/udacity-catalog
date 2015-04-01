@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block title %}Login{% endblock %}
+{% block header %}Login{% endblock %}
+{% block content %}
+
+<div class="row">
+    <div class="col-md-12">
+            {% if current_user.is_authenticated() %}
+            <p>You are already logged in. Click <a href="{{ url_for('logout') }}">here</a> to log out.</p>
+            {% else %}
+            <form method="POST">
+                <button class="btn btn-primary">Sign in with Google</button>
+            </form>
+            {% endif %}
+    </div>
+</div>
+
+{% endblock %}

@@ -18,10 +18,12 @@
                 <td>{{ loop.index }}</td>
                 <td>
                     {{ item.name }}
+                    {% if current_user.is_authenticated() %}
                     <div class="action-group pull-right">
                         <a href="{{ url_for('editItem', item_id=item.id) }}">Edit</i></a>
                         <a href="{{ url_for('deleteItem', item_id=item.id) }}">Delete</i></a>
                     </div>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
