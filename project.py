@@ -77,23 +77,33 @@ def createItem():
     name = request.form['name'].strip()
 
     if not name:
-        return render_template('create_item.html', categories=categories) # ToDo error message
+        flash("Please enter a name.", "danger")
+        return render_template('create_item.html', categories=categories)
 
     category_name = request.form['category'].strip()
 
     if not category_name:
-        return render_template('create_item.html', categories=categories) # ToDo error message
+        flash("Please choose a category", "danger")
+        return render_template('create_item.html', categories=categories)
 
-    # ToDo check if already exists
+    try:
+        category = session.query(Category).filter_by(name=category_name).one()
+    except Exception, e:
+        flash("Please choose a valid category", "danger")
+        return render_template('create_item.html', categories=categories)
 
-    category = session.query(Category).filter_by(name=category_name).one()
+    # check if an items with the same name already exists in this category
+    existingItem = session.query(Item).filter_by(category_id=category.id, name=name).first()
+    if existingItem:
+        flash("An item with the same name already exists in this category. Please choose a different name", "danger")
+        return render_template('create_item.html', categories=categories)
 
     description = request.form['description'].strip()
 
     item = Item(name=name, description=description, category=category, creation_date=datetime.utcnow())
     session.add(item)
     session.commit()
-    flash("the item '%s' has been created" % name, "success")
+    flash("The item '%s' has been created." % name, "success")
 
     return redirect(url_for('listItems', category_id=category.id))
 
@@ -114,27 +124,35 @@ def editItem(item_id):
     name = request.form['name'].strip()
 
     if not name:
-        return render_template('edit_item.html', categories=categories, item=item) # ToDo error message
+        flash("Please enter a name.", "danger")
+        return render_template('edit_item.html', categories=categories, item=item)
 
     category_name = request.form['category'].strip()
 
     if not category_name:
-        return render_template('edit_item.html', categories=categories, item=item) # ToDo error message
+        flash("Please choose a category", "danger")
+        return render_template('edit_item.html', categories=categories, item=item)
 
-    category = session.query(Category).filter_by(name=category_name).one()
+    try:
+        category = session.query(Category).filter_by(name=category_name).one()
+    except Exception, e:
+        flash("Please choose a valid category", "danger")
+        return render_template('edit_item.html', categories=categories, item=item)
 
     description = request.form['description'].strip()
 
-    # ToDo check if already exists
-
-    category = session.query(Category).filter_by(name=category_name).one()
+    # check if an items with the same name already exists in this category
+    existingItem = session.query(Item).filter_by(category_id=category.id, name=name).first()
+    if existingItem and existingItem.id != item.id:
+        flash("An item with the same name already exists in this category. Please choose a different name", "danger")
+        return render_template('edit_item.html', categories=categories, item=item)
 
     item.name = name
     item.description = description
     item.category = category
     session.add(item)
     session.commit()
-    flash("the item '%s' has been modified" % name, "success")
+    flash("Your changes have been saved." % name, "success")
 
     return redirect(url_for('listItems', category_id=category.id))
 
