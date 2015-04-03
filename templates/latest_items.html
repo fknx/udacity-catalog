@@ -33,7 +33,7 @@
         </table>
     </div>
     {% else %}
-        <p>No items have been defined yet. Click <a href="{{ url_for('createItem') }}">here</a> to create a new item.</p>
+        <p>No items have been defined yet.{% if current_user.is_authenticated() %} Click <a href="{{ url_for('createItem') }}">here</a> to create a new item.{% endif %}</p>
     {% endif %}
 
     <script>

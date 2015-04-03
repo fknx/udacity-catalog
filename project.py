@@ -6,6 +6,7 @@ from urllib import urlencode
 
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask import session as flask_session
+from werkzeug.exceptions import NotFound
 app = Flask(__name__)
 
 from sqlalchemy import create_engine, desc
@@ -29,8 +30,8 @@ session = DBSession()
 # limit the size of the content to ~ 5 MB (for the picture upload)
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 
-app.config['GOOGLE_LOGIN_CLIENT_ID'] = '971132785154-vn9r0pssabbtc8vm3a7ereqpfqgoggiu.apps.googleusercontent.com'
-app.config['GOOGLE_LOGIN_CLIENT_SECRET'] = 'WqKlNGr-6elvPHEwzObG_b64'
+app.config['GOOGLE_LOGIN_CLIENT_ID'] = '<Client ID>'
+app.config['GOOGLE_LOGIN_CLIENT_SECRET'] = '<Client Secret>'
 app.config['GOOGLE_LOGIN_REDIRECT_URI'] = 'http://localhost:8000/oauth2callback/'
 
 login_manager = LoginManager()
@@ -74,7 +75,7 @@ def itemPicture(item_id):
     item = session.query(Item).get(item_id)
 
     if not item.picture:
-        return None, 404
+        raise NotFound()
 
     file_extension = item.picture.rsplit('.', 1)[1].lower()
 
@@ -295,16 +296,25 @@ def logout():
 @googlelogin.oauth2callback
 def oauth2callback(token, userinfo, **params):
     """The Oauth2 callback from Flask-GoogleLogin"""
-    id = userinfo['id']
-    name = userinfo['name']
-    picture = userinfo['picture']
+    id = str(userinfo['id'])
+    name = userinfo['name'].strip()
 
-    user = User(id, name, picture)
+    changed = False
 
-    login_user(user)
+    user = session.query(User).filter_by(id=id).first()
 
-    # store the user info in the session
-    flask_session['user'] = (id, name, picture)
+    if not user:
+        user = User(id=id, name=name)
+        changed = True
+    elif user.name != name:
+        user.name = name
+        changed = True
+
+    if changed:
+        session.add(user)
+        session.commit()
+
+    login_user(user, remember=True)
 
     return redirect(request.args.get("next") or url_for("latestItems"))
 
@@ -321,19 +331,12 @@ def load_user(userid):
         the user object or None in case the user could not be retrieved from the session
     """
     try:
-        userTuple = flask_session['user']
+        print "load_user called: %s" % userid
+        user = session.query(User).filter_by(id=str(userid)).first()
 
-        if not userTuple:
+        if not user:
             return None
 
-        id = userTuple[0]
-        if userid != id:
-            return None
-
-        name = userTuple[1]
-        picture = userTuple[2]
-
-        user = User(id, name, picture)
         return user
     except:
         return None

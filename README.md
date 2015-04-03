@@ -35,3 +35,4 @@ To start the app simply run
 	- **JSON:** /catalog.json
 	- **XML:** /catalog.xml
 - The app uses a (slightly modified) **dashboard.css** stylesheet from Bootstrap's [Dashboard sample page](http://getbootstrap.com/examples/dashboard/).
+- The app is not optimized for small devices (smartphones etc.).

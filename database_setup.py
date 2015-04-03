@@ -74,12 +74,12 @@ class Item(Base):
 
         content.append("</Item>")
 
-class User(object):
+class User(Base):
 
-    def __init__(self, id, name, picture):
-        self.id = id
-        self.name = name
-        self.picture = picture
+    __tablename__ = "users"
+
+    id = Column(String(255), primary_key = True) # the id from Google is to big to be stored in an Integer
+    name = Column(String(255), nullable = False)
 
     def is_authenticated(self):
         return True
