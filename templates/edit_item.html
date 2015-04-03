@@ -1,8 +1,16 @@
 {% extends "layout.html" %}
 {% block title %}Edit Item{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <!-- Add  Jasny Bootstrap for the picture upload functionality. -->
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/css/jasny-bootstrap.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jasny-bootstrap/3.1.3/js/jasny-bootstrap.min.js"></script>
+{% endblock %}
+
 {% block header %}Edit Item '{{ item.name }}' <small>{{ item.category.name }}</small>{% endblock %}
 {% block content %}
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
         <div class="form-group">
             <label for="name">Name</label>
             <input type="text" class="form-control" name="name" id="name" placeholder="enter the name" value="{{ item.name }}" />
@@ -19,8 +27,53 @@
                 {% endfor %}
             </select>
         </div>
+
+        <div class="form-group">
+            <label for="picture">Image</label>
+        </div>
+
+        <div class="fileinput fileinput-new" data-provides="fileinput" style="margin-top: -15px;">
+            <div class="fileinput-new thumbnail" style="width: 150px; height: 150px;" id="thumbnailContainer">
+                {% if item.picture %}
+                <img src="{{ url_for('itemPicture', item_id=item.id) }}" alt="{{ item.picture }}" />
+                {% endif %}
+            </div>
+            <div class="fileinput-preview fileinput-exists thumbnail" style="max-width: 200px; max-height: 150px;"></div>
+            <div>
+                <span class="btn btn-default btn-file"><span class="fileinput-new">Select image</span><span class="fileinput-exists">Change</span><input type="file" name="picture"></span>
+                <a href="#" class="btn btn-default fileinput-exists" data-dismiss="fileinput">Remove</a>
+                {% if item.picture %}
+                <a href="#" class="btn btn-default" id="btnRemoveExistingPicture">Remove</a>
+                {% endif %}
+            </div>
+        </div>
+
         <input type="hidden" name="nonce" id="nonce" value="{{ nonce }}" />
-        <button type="submit" class="btn btn-primary">Save</button>
-        <a class="btn btn-default" href=" {{ url_for('latestItems') }}">Cancel</a>
+        <input type="hidden" name="removeExistingPicture" id="removeExistingPicture" value="false" />
+
+        <div>
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a class="btn btn-default" href=" {{ url_for('latestItems') }}">Cancel</a>
+        </div>
     </form>
+
+    {% if item.picture %}
+    <script type="text/javascript">
+        var removeExistingPicture = function() {
+            $("#thumbnailContainer").empty();
+            $("#removeExistingPicture").val("true");
+            $("#btnRemoveExistingPicture").remove();
+        };
+
+        $("#btnRemoveExistingPicture").click(function () {
+            removeExistingPicture();
+        });
+
+        var fileinput = $('.fileinput').fileinput();
+        fileinput.on('change.bs.fileinput', function(e, files){
+            removeExistingPicture();
+        });
+    </script>
+
+    {% endif %}
 {% endblock %}

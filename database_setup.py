@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Text
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Text, LargeBinary
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine
@@ -46,6 +46,8 @@ class Item(Base):
     name = Column(String(255), nullable = False)
     description = Column(Text, nullable = True)
     creation_date = Column(DateTime, nullable = False)
+    picture = Column(Text, nullable = True)
+    picture_data = Column(LargeBinary, nullable = True)
 
     category_id = Column(Integer, ForeignKey("categories.id"))
 

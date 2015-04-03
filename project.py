@@ -26,8 +26,11 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+# limit the size of the content to ~ 5 MB (for the picture upload)
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+
 app.config['GOOGLE_LOGIN_CLIENT_ID'] = '971132785154-vn9r0pssabbtc8vm3a7ereqpfqgoggiu.apps.googleusercontent.com'
-app.config['GOOGLE_LOGIN_CLIENT_SECRET'] = '<client secret>'
+app.config['GOOGLE_LOGIN_CLIENT_SECRET'] = 'WqKlNGr-6elvPHEwzObG_b64'
 app.config['GOOGLE_LOGIN_REDIRECT_URI'] = 'http://localhost:8000/oauth2callback/'
 
 login_manager = LoginManager()
@@ -66,6 +69,22 @@ def showItem(category_id, item_id):
     item = session.query(Item).filter_by(id=item_id, category_id=category.id).one()
     return render_template("show_item.html", categories=categories, item=item)
 
+@app.route('/item/<int:item_id>/picture/')
+def itemPicture(item_id):
+    item = session.query(Item).get(item_id)
+
+    if not item.picture:
+        return None, 404
+
+    file_extension = item.picture.rsplit('.', 1)[1].lower()
+
+    if file_extension == "jpg" or file_extension == "jpeg":
+        content_type = "image/jpeg"
+    else:
+        content_type = "image/png" # the image type must be png, as only jpg and png are allowed
+
+    return item.picture_data, 200, {'Content-Type': content_type, 'Content-Disposition': "filename='%s'" % item.picture}
+
 @app.route('/item/new/', methods=['GET','POST'])
 @login_required
 def createItem():
@@ -95,7 +114,7 @@ def createItem():
     try:
         category = session.query(Category).filter_by(name=category_name).one()
     except Exception, e:
-        flash("Please choose a valid category", "danger")
+        flash("Please choose a valid category.", "danger")
         return render_template('create_item.html', categories=categories, nonce=createNonce())
 
     # check if an items with the same name already exists in this category
@@ -106,14 +125,32 @@ def createItem():
 
     description = request.form['description'].strip()
 
+    picture = request.files['picture']
+    picture_data = None
+
+    if picture:
+        if not allowed_file(picture.filename):
+            flash("The picture must be a JPEG or PNG file.", "danger")
+            return render_template('create_item.html', categories=categories, nonce=createNonce())
+
+        picture_data = picture.read()
+
     item = Item(name=name, description=description, category=category, creation_date=datetime.utcnow())
+    if picture_data:
+        item.picture = picture.filename
+        item.picture_data = picture_data
+
     session.add(item)
     session.commit()
     flash("The item '%s' has been created." % name, "success")
 
     return redirect(url_for('listItems', category_id=category.id))
 
-@app.route('/item/edit/<int:item_id>/', methods=['GET','POST'])
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ['jpg', 'jpeg', 'png']
+
+@app.route('/item/<int:item_id>/edit/', methods=['GET','POST'])
 @login_required
 def editItem(item_id):
     """Modifies the item with the given id.
@@ -159,16 +196,38 @@ def editItem(item_id):
         flash("An item with the same name already exists in this category. Please choose a different name", "danger")
         return render_template('edit_item.html', categories=categories, item=item, nonce=createNonce())
 
+    removeExistingPicture = request.form['removeExistingPicture'].strip().lower()
+
+    if removeExistingPicture == "true":
+        item.picture = None
+        item.picture_data = None
+
+    picture = request.files['picture']
+    picture_data = None
+
+    if picture:
+        if not allowed_file(picture.filename):
+            flash("The picture must be a JPEG or PNG file.", "danger")
+            return render_template('edit_item.html', categories=categories, item=item, nonce=createNonce())
+
+        picture_data = picture.read()
+        print "Content-Length: %s" % picture.content_length
+
     item.name = name
     item.description = description
     item.category = category
+
+    if picture_data:
+        item.picture = picture.filename
+        item.picture_data = picture_data
+
     session.add(item)
     session.commit()
     flash("Your changes have been saved.", "success")
 
     return redirect(url_for('listItems', category_id=category.id))
 
-@app.route('/item/delete/<int:item_id>/', methods=['GET','POST'])
+@app.route('/item/<int:item_id>/delete/', methods=['GET','POST'])
 @login_required
 def deleteItem(item_id):
     """Delete the item with the given id.
@@ -189,7 +248,7 @@ def deleteItem(item_id):
 
     session.delete(item)
     session.commit()
-    flash("the item '%s' has been removed" % item.name, "success")
+    flash("The item '%s' has been removed." % item.name, "success")
 
     return redirect(url_for('listItems', category_id=item.category.id))
 
