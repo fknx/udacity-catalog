@@ -2,11 +2,17 @@
 
 ## Preparations ##
 
-This app uses [Flask-GoogleLogin](https://pythonhosted.org/Flask-GoogleLogin/) so you have to install it before you can run the app.
+This app uses 
 
-To install Flask-GoogleLogin run
+- [Flask](http://flask.pocoo.org)
+- [SQLAlchemy](http://www.sqlalchemy.org)
+- and [Flask-GoogleLogin](https://pythonhosted.org/Flask-GoogleLogin/)
 
-    pip install Flask-GoogleLogin
+These dependencies must be installed before you can run the app. The easiest way to do so is by using [pip](https://pypi.python.org/pypi/pip). Simply run the following commands:
+
+    pip install Flask
+	pip install SQLAlchemy
+	pip install Flask-GoogleLogin
 
 As the app uses Google for authentication as the next step you have to obtain a client id and client secret from Google:
 
